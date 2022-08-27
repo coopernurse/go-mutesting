@@ -1,14 +1,12 @@
 package mutator
 
 import (
-	"go/ast"
-	"go/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func mockMutator(pkg *types.Package, info *types.Info, node ast.Node) []Mutation {
+func mockMutator(input MutatorInput) []Mutation {
 	// Do nothing
 
 	return nil

@@ -28,14 +28,19 @@ func Mutator(t *testing.T, m mutator.Mutator, testFile string, count int) {
 	assert.Nil(t, err)
 
 	// Mutate a non relevant node
-	assert.Nil(t, m(pkg, info, src))
+	input := mutator.MutatorInput{
+		Pkg:  pkg,
+		Info: info,
+		Node: src,
+	}
+	assert.Nil(t, m(input))
 
 	// Count the actual mutations
-	n := mutesting.CountWalk(pkg, info, src, m)
+	n := mutesting.CountWalk(pkg, info, src, m, input.Options)
 	assert.Equal(t, count, n)
 
 	// Mutate all relevant nodes -> test whole mutation process
-	changed := mutesting.MutateWalk(pkg, info, src, m)
+	changed := mutesting.MutateWalk(pkg, info, src, m, input.Options)
 
 	for i := 0; i < count; i++ {
 		assert.True(t, <-changed)

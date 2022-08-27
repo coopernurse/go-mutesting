@@ -56,19 +56,28 @@ func ParseAndTypeCheckFile(file string, flags ...string) (*ast.File, *token.File
 		pkgPath = dir
 	}
 
-	prog, err := packages.Load(&packages.Config{
+	pkgs, err := packages.Load(&packages.Config{
 		ParseFile: func(fset *token.FileSet, filename string, src []byte) (*ast.File, error) {
 			return parser.ParseFile(fset, filename, src, parser.ParseComments|parser.AllErrors)
 		},
 		BuildFlags: flags,
 		Mode:       packages.NeedTypes | packages.NeedSyntax | packages.NeedDeps | packages.NeedName | packages.NeedImports | packages.NeedTypesInfo | packages.NeedFiles,
-	}, pkgPath)
+	}, "file="+file)
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil, nil, nil, fmt.Errorf("could not load package of file %q: %v", file, err)
 	}
 
-	pkgInfo := prog[0]
+	pkgInfo := pkgs[0]
+
+	if len(pkgInfo.Syntax) == 0 {
+		fmt.Println("pkgInfo.Syntax is empty")
+		fmt.Printf("pkgPath: %s\n", pkgPath)
+		fmt.Printf("pkgs: %+v\n", pkgs)
+
+		pkgInfoJSON, _ := pkgInfo.MarshalJSON()
+		fmt.Printf("pkgInfo: %s\n", string(pkgInfoJSON))
+	}
 
 	var src *ast.File
 	for _, f := range pkgInfo.Syntax {

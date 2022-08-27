@@ -2,7 +2,6 @@ package branch
 
 import (
 	"go/ast"
-	"go/types"
 
 	"github.com/zimmski/go-mutesting/astutil"
 	"github.com/zimmski/go-mutesting/mutator"
@@ -13,8 +12,8 @@ func init() {
 }
 
 // MutatorCase implements a mutator for case clauses.
-func MutatorCase(pkg *types.Package, info *types.Info, node ast.Node) []mutator.Mutation {
-	n, ok := node.(*ast.CaseClause)
+func MutatorCase(input mutator.MutatorInput) []mutator.Mutation {
+	n, ok := input.Node.(*ast.CaseClause)
 	if !ok {
 		return nil
 	}
@@ -25,7 +24,7 @@ func MutatorCase(pkg *types.Package, info *types.Info, node ast.Node) []mutator.
 		{
 			Change: func() {
 				n.Body = []ast.Stmt{
-					astutil.CreateNoopOfStatements(pkg, info, n.Body),
+					astutil.CreateNoopOfStatements(input.Pkg, input.Info, n.Body),
 				}
 			},
 			Reset: func() {

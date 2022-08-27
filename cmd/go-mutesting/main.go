@@ -54,6 +54,7 @@ type options struct {
 	Mutator struct {
 		DisableMutators []string `long:"disable" description:"Disable mutator by their name or using * as a suffix pattern"`
 		ListMutators    bool     `long:"list-mutators" description:"List all available mutators"`
+		NameExclude     string   `long:"name-exclude" description:"Regexp of identifier/statement names to exclude"`
 	} `group:"Mutator options"`
 
 	Filter struct {
@@ -259,6 +260,11 @@ MUTATOR:
 			return exitError(err.Error())
 		}
 
+		if src == nil {
+			fmt.Printf("skipping nil src for file: %s\n", file)
+			continue
+		}
+
 		err = os.MkdirAll(tmpDir+"/"+filepath.Dir(file), 0755)
 		if err != nil {
 			panic(err)
@@ -312,7 +318,16 @@ func mutate(opts *options, mutators []mutatorItem, mutationBlackList map[string]
 	for _, m := range mutators {
 		debug(opts, "Mutator %s", m.Name)
 
-		changed := mutesting.MutateWalk(pkg, info, node, m.Mutator)
+		mutatorOpts := mutator.MutatorOptions{}
+		if opts.Mutator.NameExclude != "" {
+			re, err := regexp.Compile(opts.Mutator.NameExclude)
+			if err != nil {
+				panic(fmt.Sprintf("Unable to compile regexp for NameExclude: %s - %v", opts.Mutator.NameExclude, err))
+			}
+			mutatorOpts.NameExclude = re
+		}
+
+		changed := mutesting.MutateWalk(pkg, info, node, m.Mutator, mutatorOpts)
 
 		for {
 			_, ok := <-changed

@@ -1,9 +1,9 @@
 package statement
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
-	"go/types"
 
 	"github.com/zimmski/go-mutesting/astutil"
 	"github.com/zimmski/go-mutesting/mutator"
@@ -27,10 +27,10 @@ func checkRemoveStatement(node ast.Stmt) bool {
 }
 
 // MutatorRemoveStatement implements a mutator to remove statements.
-func MutatorRemoveStatement(pkg *types.Package, info *types.Info, node ast.Node) []mutator.Mutation {
+func MutatorRemoveStatement(input mutator.MutatorInput) []mutator.Mutation {
 	var l []ast.Stmt
 
-	switch n := node.(type) {
+	switch n := input.Node.(type) {
 	case *ast.BlockStmt:
 		l = n.List
 	case *ast.CaseClause:
@@ -40,13 +40,27 @@ func MutatorRemoveStatement(pkg *types.Package, info *types.Info, node ast.Node)
 	var mutations []mutator.Mutation
 
 	for i, ni := range l {
-		if checkRemoveStatement(ni) {
+		keep := true
+
+		if input.Options.NameExclude != nil {
+			idents := astutil.IdentifiersInStatement(input.Pkg, input.Info, ni)
+			for _, id := range idents {
+				name := nodeName(id)
+				if input.Options.NameExclude.FindString(name) != "" {
+					keep = false
+					break
+				}
+				//fmt.Printf("RemoveStmt %d: %v\n", x, name)
+			}
+		}
+
+		if keep && checkRemoveStatement(ni) {
 			li := i
 			old := l[li]
 
 			mutations = append(mutations, mutator.Mutation{
 				Change: func() {
-					l[li] = astutil.CreateNoopOfStatement(pkg, info, old)
+					l[li] = astutil.CreateNoopOfStatement(input.Pkg, input.Info, old)
 				},
 				Reset: func() {
 					l[li] = old
@@ -56,4 +70,15 @@ func MutatorRemoveStatement(pkg *types.Package, info *types.Info, node ast.Node)
 	}
 
 	return mutations
+}
+
+func nodeName(e ast.Expr) string {
+	switch v := e.(type) {
+	case *ast.Ident:
+		return v.Name
+	case *ast.SelectorExpr:
+		return v.Sel.Name
+	default:
+		return fmt.Sprintf("%T", e)
+	}
 }

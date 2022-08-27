@@ -4,11 +4,24 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"regexp"
 	"sort"
 )
 
+type MutatorOptions struct {
+	// identifier and statement names to exclude
+	NameExclude *regexp.Regexp
+}
+
+type MutatorInput struct {
+	Pkg     *types.Package
+	Info    *types.Info
+	Node    ast.Node
+	Options MutatorOptions
+}
+
 // Mutator defines a mutator for mutation testing by returning a list of possible mutations for the given node.
-type Mutator func(pkg *types.Package, info *types.Info, node ast.Node) []Mutation
+type Mutator func(input MutatorInput) []Mutation
 
 var mutatorLookup = make(map[string]Mutator)
 

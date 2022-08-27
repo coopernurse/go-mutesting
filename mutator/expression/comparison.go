@@ -3,7 +3,6 @@ package expression
 import (
 	"go/ast"
 	"go/token"
-	"go/types"
 
 	"github.com/zimmski/go-mutesting/mutator"
 )
@@ -20,8 +19,8 @@ var comparisonMutations = map[token.Token]token.Token{
 }
 
 // MutatorComparison implements a mutator to change comparisons.
-func MutatorComparison(pkg *types.Package, info *types.Info, node ast.Node) []mutator.Mutation {
-	n, ok := node.(*ast.BinaryExpr)
+func MutatorComparison(input mutator.MutatorInput) []mutator.Mutation {
+	n, ok := input.Node.(*ast.BinaryExpr)
 	if !ok {
 		return nil
 	}
