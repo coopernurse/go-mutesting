@@ -25,10 +25,15 @@ func MutatorElse(input mutator.MutatorInput) []mutator.Mutation {
 
 	old := n.Else
 
+	newStmt, modified := astutil.CreateNoopOfStatement(input.Pkg, input.Info, old, input.Options)
+	if !modified {
+		return nil
+	}
+
 	return []mutator.Mutation{
 		{
 			Change: func() {
-				n.Else = astutil.CreateNoopOfStatement(input.Pkg, input.Info, old)
+				n.Else = newStmt
 			},
 			Reset: func() {
 				n.Else = old

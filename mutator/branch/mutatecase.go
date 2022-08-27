@@ -20,12 +20,15 @@ func MutatorCase(input mutator.MutatorInput) []mutator.Mutation {
 
 	old := n.Body
 
+	newStmts, modified := astutil.CreateNoopOfStatements(input.Pkg, input.Info, n.Body, input.Options)
+	if !modified {
+		return nil
+	}
+
 	return []mutator.Mutation{
 		{
 			Change: func() {
-				n.Body = []ast.Stmt{
-					astutil.CreateNoopOfStatements(input.Pkg, input.Info, n.Body),
-				}
+				n.Body = newStmts
 			},
 			Reset: func() {
 				n.Body = old

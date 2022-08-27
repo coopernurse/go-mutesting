@@ -20,12 +20,15 @@ func MutatorIf(input mutator.MutatorInput) []mutator.Mutation {
 
 	old := n.Body.List
 
+	newStmt, modified := astutil.CreateNoopOfStatement(input.Pkg, input.Info, n.Body, input.Options)
+	if !modified {
+		return nil
+	}
+
 	return []mutator.Mutation{
 		{
 			Change: func() {
-				n.Body.List = []ast.Stmt{
-					astutil.CreateNoopOfStatement(input.Pkg, input.Info, n.Body),
-				}
+				n.Body.List = []ast.Stmt{newStmt}
 			},
 			Reset: func() {
 				n.Body.List = old
