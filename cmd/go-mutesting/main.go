@@ -146,7 +146,7 @@ type mutationStats struct {
 }
 
 func (ms *mutationStats) Score() float64 {
-	total := ms.Total()
+	total := ms.passed + ms.failed
 
 	if total == 0 {
 		return 0.0
